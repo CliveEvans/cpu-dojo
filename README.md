@@ -1,0 +1,3 @@
+We're working through a series of small dojos at work in order to learn a bit more about CPUs.
+
+I thought I'd put my code up on github ...
