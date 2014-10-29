@@ -16,6 +16,17 @@ public class CPU {
         System.arraycopy(input, 0, this.memory, 0, input.length);
     }
 
+    public void printAsciiMemory() {
+        for (int i = 128; i < 256; i++) {
+
+            char c = (char) memory[i];
+            if (c == 0) {
+                break;
+            }
+            System.out.print(Character.toString(c));
+        }
+    }
+
     public void execute() {
         while(! currentOp().equals(Operation.BRK)) {
             doNextOp();

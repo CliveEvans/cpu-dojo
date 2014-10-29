@@ -143,8 +143,8 @@ public class CPUTest {
 
         cpu.execute();
 
-        printAsciiMemory(cpu);
 
+        cpu.printAsciiMemory();
     }
 
     @Test
@@ -201,14 +201,4 @@ public class CPUTest {
         assertThat(cpu.pointer, is(8));
     }
 
-    private void printAsciiMemory(CPU cpu) {
-        for (int i = 128; i < 256; i++) {
-
-            char c = (char) cpu.memory[i];
-            if (c == 0) {
-                break;
-            }
-            System.out.print(Character.toString(c));
-        }
-    }
 }
