@@ -2,7 +2,7 @@ package cpu;
 
 import org.junit.Test;
 
-import static cpu.CPU.Operation.*;
+import static cpu.Operation.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -145,6 +145,60 @@ public class CPUTest {
 
         printAsciiMemory(cpu);
 
+    }
+
+    @Test
+    public void theStackPointerShouldStartAtTheLastAddress() {
+        CPU cpu = new CPU();
+        assertThat(cpu.stackPointer, is(CPU.MEMORY_SIZE - 1));
+    }
+
+    @Test
+    public void shouldSetTheCurrentPointerToTheLocationOfNextOnJSR() {
+        CPU cpu = new CPU(11,12);
+        cpu.doNextOp();
+        assertThat(cpu.pointer, is(12));
+    }
+
+    @Test
+    public void shouldSetTheCurrentStackToThePointerOnJSR() {
+        CPU cpu = new CPU(5,11,12);
+        cpu.pointer = 1;
+        cpu.doNextOp();
+        assertThat(cpu.memory[CPU.MEMORY_SIZE - 1], is(1));
+    }
+
+    @Test
+    public void shouldDecrementTheStackPointerOnJSR() {
+        CPU cpu = new CPU(11,12);
+        cpu.doNextOp();
+        assertThat(cpu.stackPointer, is(CPU.MEMORY_SIZE - 2));
+    }
+
+    @Test
+    public void shouldContinueExecutionAfterJSR() {
+        CPU cpu = new CPU(5,11,4,0,5,0);
+        cpu.execute();
+        assertThat(cpu.stackPointer, is(CPU.MEMORY_SIZE - 2));
+        assertThat(cpu.registerX, is(2));
+        assertThat(cpu.memory[cpu.stackPointer + 1], is(1));
+    }
+
+    @Test
+    public void shouldAddOneToTheStackPointerOnRTS() {
+        CPU cpu = new CPU(12,0);
+        cpu.stackPointer = 10;
+        cpu.doNextOp();
+        assertThat(cpu.stackPointer, is(11));
+    }
+
+    @Test
+    public void shouldSetTheProgramCounterToTheValueStoredAtStackPlus1AfterRTS() {
+        CPU cpu = new CPU(12);
+        cpu.stackPointer = 10;
+        cpu.memory[11] = 7;
+        cpu.doNextOp();
+        assertThat(cpu.pointer, is(8));
     }
 
     private void printAsciiMemory(CPU cpu) {
