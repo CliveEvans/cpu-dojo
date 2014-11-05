@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 public class Assembler {
 
-    private static final Pattern LOOP_MATCHER = Pattern.compile("(\\w+):");
-    private static final Pattern IS_NUMERIC = Pattern.compile("\\d+");
+    private static final Pattern LABEL_PATTERN = Pattern.compile("(\\w+):");
+    private static final Pattern IS_NUMERIC_PATTERN = Pattern.compile("\\d+");
 
     List<Integer> data = new LinkedList<>();
     Map<String, Integer> labels = new HashMap<>();
@@ -19,14 +19,14 @@ public class Assembler {
 
     public void readLine(String line) {
         String[] elements = splitLine(line);
-        if(LOOP_MATCHER.matcher(elements[0]).matches()) {
+        if(LABEL_PATTERN.matcher(elements[0]).matches()) {
             return;
         }
         Operation operation = getOperation(elements[0]);
         data.add(operation.ordinal());
         if(operation.equals(Operation.BNE)) {
             String next = elements[1];
-            if(IS_NUMERIC.matcher(next).matches()) {
+            if(IS_NUMERIC_PATTERN.matcher(next).matches()) {
                 data.add(Integer.valueOf(next));
             } else {
                 data.add(labels.get(next) - (data.size() + 1));
@@ -63,7 +63,7 @@ public class Assembler {
 
     public void scanLine(String line) {
         String[] elements = splitLine(line);
-        Matcher matcher = LOOP_MATCHER.matcher(elements[0]);
+        Matcher matcher = LABEL_PATTERN.matcher(elements[0]);
         if (matcher.matches()) {
             labels.put(matcher.group(1), scanPointer + 1);
         } else {
