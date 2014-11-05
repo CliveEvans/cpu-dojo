@@ -2,20 +2,48 @@ package assembler;
 
 import cpu.Operation;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Assembler {
 
+    private static final Pattern LOOP_MATCHER = Pattern.compile("(\\w+):");
+    private static final Pattern IS_NUMERIC = Pattern.compile("\\d+");
+
     List<Integer> data = new LinkedList<>();
+    Map<String, Integer> labels = new HashMap<>();
+
+    private int scanPointer = 0;
 
     public void readLine(String line) {
-        String[] elements = line.split(" ");
-        data.add(Operation.valueOf(elements[0]).ordinal());
-        for (int i = 1; i < elements.length; i++) {
-            data.add(Integer.valueOf(elements[i]));
+        String[] elements = splitLine(line);
+        if(LOOP_MATCHER.matcher(elements[0]).matches()) {
+            return;
         }
+        Operation operation = getOperation(elements[0]);
+        data.add(operation.ordinal());
+        if(operation.equals(Operation.BNE)) {
+            String next = elements[1];
+            if(IS_NUMERIC.matcher(next).matches()) {
+                data.add(Integer.valueOf(next));
+            } else {
+                data.add(labels.get(next) - (data.size() + 1));
+            }
+        } else {
+            for (int i = 1; i < elements.length; i++) {
+                data.add(Integer.valueOf(elements[i]));
+            }
+        }
+    }
+
+    private Operation getOperation(String element) {
+        return Operation.valueOf(element);
+    }
+
+    private String[] splitLine(String line) {
+        return line.replaceAll("^ *", "").split(" ");
     }
 
     public int[] memory() {
@@ -26,8 +54,22 @@ public class Assembler {
     }
 
     public void parse(String program) {
-        Arrays.stream(program.split("\n"))
-                .filter((t) -> !t.isEmpty())
-                .forEach(this::readLine);
+        List<String> linesWithInstructions = Arrays.stream(program.split("\n"))
+                                     .filter((t) -> !t.isEmpty())
+                                     .collect(Collectors.toList());
+        linesWithInstructions.forEach(this::scanLine);
+        linesWithInstructions.forEach(this::readLine);
+    }
+
+    public void scanLine(String line) {
+        String[] elements = splitLine(line);
+        Matcher matcher = LOOP_MATCHER.matcher(elements[0]);
+        if (matcher.matches()) {
+            labels.put(matcher.group(1), scanPointer + 1);
+        } else {
+            for (int i = 1; i < elements.length; i++) {
+                scanPointer++;
+            }
+        }
     }
 }
