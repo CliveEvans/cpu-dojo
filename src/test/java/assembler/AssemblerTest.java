@@ -68,7 +68,20 @@ public class AssemblerTest {
         assembler.scanLine("  DEY");
 
         assertThat(assembler.labels.get("loop"), is(2));
+    }
 
+    @Test
+    public void shouldHandleLocationsWithLoopElementsInThem() {
+        assembler.scanLine("LDA 10");
+        assembler.scanLine("loop:");
+        assembler.scanLine("  DEY");
+        assembler.scanLine("JSR incABy10");
+        assembler.scanLine("BRK");
+        assembler.scanLine("incABy10:");
+        assembler.scanLine("   RTS");
+
+        assertThat(assembler.labels.get("loop"), is(2));
+        assertThat(assembler.labels.get("incABy10"), is(6));
     }
 
     @Test
@@ -94,9 +107,36 @@ public class AssemblerTest {
     }
 
     @Test
-    public void shouldStoreAnAddressAsNeedingASubroutineReference() {
+    public void shouldSetTheValueOf_JSR_ToTheAbsoluteLocationOfTheLoopAddress() {
+
+        assembler.labels.put("subroutine", 10);
+        assembler.readLine("JSR subroutine");
+
+        assertThat(assembler.memory(), is(array(11, 10)));
+    }
+
+    @Test
+    public void shouldCorrectlyHandlyAJSRLoop() {
+        String program =
+                "LDA 10\n" +
+                "JSR incABy10\n" +
+                "BRK\n" +
+                "\n" +
+                "incABy10:\n" +
+                "   ADC 10\n" +
+                "   JSR incABy50\n" +
+                "   RTS\n" +
+                "\n" +
+                "incABy50:\n" +
+                "   ADC 50\n" +
+                "   RTS\n";
+
+        assembler.parse(program);
+
+        assertThat(assembler.memory(), is(array(1, 10, 11, 5, 0, 2, 10, 11, 10, 12, 2, 50, 12)));
 
     }
+
 
     private int[] array(int... values) {
         return values;
